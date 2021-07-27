@@ -140,9 +140,15 @@ pub struct Output {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct Input {
+	path: PathBuf,
+	outputs: Vec<OutputName>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Derive {
 	outputs: Vec<Output>,
-	input_drvs: Vec<(PathBuf, Vec<OutputName>)>,
+	input_drvs: Vec<Input>,
 	input_srcs: Vec<PathBuf>,
 	platform: String,
 	builder: String,
