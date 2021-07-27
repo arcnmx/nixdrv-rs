@@ -33,7 +33,6 @@ fn drv_atom(data: &[u8]) -> IResult<&[u8], Atom> {
 }
 
 fn atom1(data: &[u8]) -> IResult<&[u8], Atom> {
-eprintln!("checking atom tag: {:?}", data.get(0));
 	match peek(atom_tag)(data)?.1 {
 		b"\"" => map(into(parse_string), Atom::String)(data),
 		b"(" => map(parse_tuple, Atom::Tuple)(data),
@@ -45,7 +44,6 @@ eprintln!("checking atom tag: {:?}", data.get(0));
 fn atom_streaming(data: &[u8]) -> IResult<&[u8], Atom> {
 	let (data, lhs) = atom1(data)?;
 
-	eprintln!("checking remaining atom tag: {:?}", data.get(0));
 	Ok(if !peek(alt((atom_tag, success(&b""[..]))))(data)?.1.is_empty() {
 		let (data, rhs) = atom_streaming(data)?;
 		(data, Atom::Apply(Box::new(lhs), Box::new(rhs)))
@@ -75,14 +73,12 @@ fn is_ident(c: u8) -> bool {
 
 fn parse_ident(data: &[u8]) -> IResult<&[u8], &str> {
 	map(take_while1(is_ident), |ident| unsafe {
-	eprintln!("parsed ident: {:?}", str::from_utf8_unchecked(ident));
 		str::from_utf8_unchecked(ident)
 	})(data)
 }
 
 fn parse_string(data: &[u8]) -> IResult<&[u8], &[u8]> {
 	fn escape(data: &[u8]) -> IResult<&[u8], &[u8]> {
-eprintln!("parsing string escape");
 		preceded(tag(b"\\"), tag(b"\""))(data)
 	}
 
@@ -105,12 +101,10 @@ fn list_inner(mut data: &[u8]) -> IResult<&[u8], Vec<Atom>> {
 	let mut list = Vec::new();
 	loop {
 		let (new_data, atom) = atom_streaming(data)?;
-eprintln!("parsed list atom {:?}", atom);
 		list.push(atom);
 		data = new_data;
 
 		let (new_data, sep) = alt((tag(b","), success(&b""[..])))(data)?;
-eprintln!("found list sep {:?}", str::from_utf8(sep));
 		match sep {
 			b"," => data = new_data,
 			b"" => break Ok((data, list)),
@@ -120,12 +114,10 @@ eprintln!("found list sep {:?}", str::from_utf8(sep));
 }
 
 fn parse_tuple(data: &[u8]) -> IResult<&[u8], Vec<Atom>> {
-eprintln!("parsing tuple...");
 	delimited(tag(b"("), list_inner, tag(b")"))(data)
 }
 
 fn parse_list(data: &[u8]) -> IResult<&[u8], Vec<Atom>> {
-eprintln!("parsing list...");
 	delimited(tag(b"["), list_inner, tag(b"]"))(data)
 }
 
